@@ -1,0 +1,40 @@
+name: Build and publish RPM(s)
+
+run-name: ${{ github.ref_name }}/${{ github.workflow }}
+
+on:
+  workflow_dispatch:
+
+
+jobs:
+    log:
+        runs-on: ubuntu-latest
+        steps:
+      # Must checkout own repo first before any other checkouts, otherwise the other ones get wiped out
+          - name: Checkout
+            uses: actions/checkout@v3
+
+          - name: Bot Shizz
+            run: echo "GITBOT_EMAIL = $GITBOT_EMAIL, GITHUB_ACTOR = $GITHUB_ACTOR"
+              
+          - name: Config Email
+            run:  git config --global user.email "$GITBOT_EMAIL"
+          - name: Config User
+            run:  git config --global user.name "$GITHUB_ACTOR"
+
+          - name: Create branch name
+          # TODO: how to make the branch name
+            run: echo "TEMP_BRANCH=cherry-1234" >> $GITHUB_ENV
+
+          - name: Create branch name
+            run: echo ${{ env.TEMP_BRANCH }}
+
+          - name: Checkout Develop
+            run: git checkout develop
+          
+          - name: Cherry
+            run: git cherry main -v > cherry.log
+
+          - name: Grep
+            run: cat cherry.log | grep wip | wc
+                
