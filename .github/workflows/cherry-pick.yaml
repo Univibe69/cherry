@@ -5,9 +5,31 @@ on:
 
 jobs:
   if_merged:
-    if: github.event.pull_request.merged
+    if: github.event.pull_request.merged && startsWith(github.base_ref, 'support')
     runs-on: ubuntu-latest
     steps:
+      - name: Get short SHA
+        id: get-short-sha
+        run: |
+          sha=$(echo ${{github.sha}} | cut -c 1-7)
+          echo "sha=$sha" >> $GITHUB_OUTPUT
+
+      - name: Get Branch Name
+        id: get-branch-name
+        run: |
+          echo "branch=${{ steps.get-short-sha.outputs.sha }}=>develop" >> $GITHUB_OUTPUT
+
+      - name: Debug
+        id: debug
+        run: |
+            {
+              echo "### Workflow variables"
+              echo "| Variable   | Value                                       |"
+              echo "| ---------- | ------------------------------------------- |"
+              echo "| sha        | ${{ steps.get-short-sha.outputs.sha }}      |"
+              echo "| branch     | ${{ steps.get-branch-name.outputs.branch }} |"
+            } >> $GITHUB_STEP_SUMMARY
+
       - name: Dump GitHub context
         env:
           GITHUB_CONTEXT: ${{ toJson(github) }}
