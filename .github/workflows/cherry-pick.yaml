@@ -5,38 +5,77 @@ on:
 
 jobs:
   if_merged:
-    if: github.event.pull_request.merged
+    if: github.event.pull_request.merged && startsWith(github.base_ref, 'support')
     runs-on: ubuntu-latest
     steps:
       - name: Dump GitHub context
         env:
           GITHUB_CONTEXT: ${{ toJson(github) }}
         run: echo "GITHUB_CONTEXT = $GITHUB_CONTEXT"
-      - name: Dump job context
-        env:
-          JOB_CONTEXT: ${{ toJson(job) }}
-        run: echo "JOB_CONTEXT = $JOB_CONTEXT"
-      - name: Dump steps context
-        env:
-          STEPS_CONTEXT: ${{ toJson(steps) }}
-        run: echo "STEPS_CONTEXT = $STEPS_CONTEXT"
-      - name: Dump runner context
-        env:
-          RUNNER_CONTEXT: ${{ toJson(runner) }}
-        run: echo "STEPS_CONTEXT = $RUNNER_CONTEXT"
-      - name: Dump strategy context
-        env:
-          STRATEGY_CONTEXT: ${{ toJson(strategy) }}
-        run: echo "STRATEGY_CONTEXT = $STRATEGY_CONTEXT"
-      - name: Dump matrix context
-        env:
-          MATRIX_CONTEXT: ${{ toJson(matrix) }}
-        run: echo "MATRIX_CONTEXT = $MATRIX_CONTEXT"
 
-      - name: Show default environment variables
+      - name: Get short SHA
+        id: get-short-sha
         run: |
-          echo "The job_id is: $GITHUB_JOB"   # reference the default environment variables
-          echo "The id of this action is: $GITHUB_ACTION"   # reference the default environment variables
-          echo "The run id is: $GITHUB_RUN_ID"
-          echo "The GitHub Actor's username is: $GITHUB_ACTOR"
-          echo "GitHub SHA: $GITHUB_SHA"
+          sha=$(echo ${{github.sha}} | cut -c 1-7)
+          echo "sha=$sha" >> $GITHUB_OUTPUT
+
+      - name: Get Branch Name
+        id: get-branch-name
+        run: |
+          echo "branch=${{ steps.get-short-sha.outputs.sha }}=>develop" >> $GITHUB_OUTPUT
+
+      - name: Debug
+        id: debug
+        run: |
+            {
+              echo "### Workflow variables"
+              echo "| Variable   | Value                                       |"
+              echo "| ---------- | ------------------------------------------- |"
+              echo "| sha        | ${{ steps.get-short-sha.outputs.sha }}      |"
+              echo "| branch     | ${{ steps.get-branch-name.outputs.branch }} |"
+            } >> $GITHUB_STEP_SUMMARY
+
+      - name: Checkout Support
+        uses: actions/checkout@v3        
+        with:
+          ref: ${{ github.base_ref }}
+      
+      # do I ned to checkout develop ? 
+      # maybe i could judt do:
+      #   git checkout -b ${{ steps.get-branch-name.outputs.branch }} origin/develop
+      - name: Checkout Develop Branch
+        uses: actions/checkout@v3
+        with:
+          ref: develop
+
+      - name: Create Branch off Develop
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git checkout -b ${{ steps.get-branch-name.outputs.branch }} develop
+      
+      # - name: Cherry pick the merge commit
+      #   run: |
+      #     git config user.name github-actions
+      #     git config user.email github-actions@github.com      
+      #     git cherry-pick -m 1 ${{ github.sha }}
+
+      - name: Cherry pick into ${{ steps.get-branch-name.outputs.branch }}
+        uses: carloscastrojumo/github-cherry-pick-action@v1.0.1
+        with:
+          branch: ${{ steps.get-branch-name.outputs.branch }}
+          labels: |
+            cherry-pick
+
+      # - name: Merge support branch into develop
+      #   run: |
+      #     git config user.name github-actions
+      #     git config user.email github-actions@github.com      
+      #     git merge ${{ github.base_ref }}
+      
+
+      - name: Push new branch
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com      
+          git push -f origin ${{ steps.get-branch-name.outputs.branch }}            
