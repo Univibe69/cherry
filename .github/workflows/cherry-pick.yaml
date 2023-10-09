@@ -74,8 +74,11 @@ jobs:
       #     git merge ${{ github.base_ref }}
       
 
-      - name: Push new branch
-        run: |
-          git config user.name github-actions
-          git config user.email github-actions@github.com      
-          git push -f origin ${{ steps.get-branch-name.outputs.branch }}            
+      # - name: Push new branch
+      #   run: |
+      #     git config user.name github-actions
+      #     git config user.email github-actions@github.com      
+      #     git push -f origin ${{ steps.get-branch-name.outputs.branch }}            
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}                    
