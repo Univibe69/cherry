@@ -37,12 +37,17 @@ jobs:
 
       - name: Checkout Support
         uses: actions/checkout@v3        
-          
+        with:
+          ref: ${{ github.base_ref }}
+      
+      # do I ned to checkout develop ? 
+      # maybe i could judt do:
+      #   git checkout -b ${{ steps.get-branch-name.outputs.branch }} origin/develop
       - name: Checkout Develop Branch
         uses: actions/checkout@v3
         with:
           ref: develop
-          
+
       - name: Create Branch off Develop
         run: |
           git config user.name github-actions
