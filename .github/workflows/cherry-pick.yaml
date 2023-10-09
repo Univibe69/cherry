@@ -43,16 +43,16 @@ jobs:
       # do I ned to checkout develop ? 
       # maybe i could judt do:
       #   git checkout -b ${{ steps.get-branch-name.outputs.branch }} origin/develop
-      # - name: Checkout Develop Branch
-      #   uses: actions/checkout@v3
-      #   with:
-      #     ref: develop
+      - name: Checkout Develop Branch
+        uses: actions/checkout@v3
+        with:
+          ref: develop
 
       - name: Create Branch off Develop
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
-          git checkout -b ${{ steps.get-branch-name.outputs.branch }} origin/develop
+          git checkout -b ${{ steps.get-branch-name.outputs.branch }} develop
       
       # - name: Cherry pick the merge commit
       #   run: |
@@ -60,11 +60,18 @@ jobs:
       #     git config user.email github-actions@github.com      
       #     git cherry-pick -m 1 ${{ github.sha }}
 
-      - name: Merge support branch into develop
-        run: |
-          git config user.name github-actions
-          git config user.email github-actions@github.com      
-          git merge ${{ github.base_ref }}
+      - name: Cherry pick into ${{ steps.get-branch-name.outputs.branch }}
+        uses: carloscastrojumo/github-cherry-pick-action@v1.0.1
+        with:
+          branch: ${{ steps.get-branch-name.outputs.branch }}
+          labels: |
+            cherry-pick
+
+      # - name: Merge support branch into develop
+      #   run: |
+      #     git config user.name github-actions
+      #     git config user.email github-actions@github.com      
+      #     git merge ${{ github.base_ref }}
       
 
       - name: Push new branch
