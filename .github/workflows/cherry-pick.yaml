@@ -30,6 +30,32 @@ jobs:
               echo "| branch     | ${{ steps.get-branch-name.outputs.branch }} |"
             } >> $GITHUB_STEP_SUMMARY
 
+      - name: Checkout Support
+        uses: actions/checkout@v3        
+          
+      - name: Checkout Develop Branch
+        uses: actions/checkout@v3
+        with:
+          ref: develop
+          
+      - name: Create Branch off Develop
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git checkout -b ${{ steps.get-branch-name.outputs.branch }} develop
+      
+      - name: Cherry pick the merge commit
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com      
+          git git cherry-pick -m 1 ${{ github.sha }}
+      
+      - name: Push new branch
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com      
+          git push -f origin ${{ steps.get-branch-name.outputs.branch }}            
+
       - name: Dump GitHub context
         env:
           GITHUB_CONTEXT: ${{ toJson(github) }}
