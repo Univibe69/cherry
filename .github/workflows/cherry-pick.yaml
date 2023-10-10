@@ -61,7 +61,7 @@ jobs:
       #     git cherry-pick -m 1 ${{ github.sha }}
 
       - name: Cherry pick into develop
-        uses: carloscastrojumo/github-cherry-pick-action@v1.0.1
+        uses: carloscastrojumo/github-cherry-pick-action@v1.0.9
         with:
           branch: develop
           labels: |
