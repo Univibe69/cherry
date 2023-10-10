@@ -13,27 +13,27 @@ jobs:
           GITHUB_CONTEXT: ${{ toJson(github) }}
         run: echo "GITHUB_CONTEXT = $GITHUB_CONTEXT"
 
-      - name: Get short SHA
-        id: get-short-sha
-        run: |
-          sha=$(echo ${{github.sha}} | cut -c 1-7)
-          echo "sha=$sha" >> $GITHUB_OUTPUT
+      # - name: Get short SHA
+      #   id: get-short-sha
+      #   run: |
+      #     sha=$(echo ${{github.sha}} | cut -c 1-7)
+      #     echo "sha=$sha" >> $GITHUB_OUTPUT
 
-      - name: Get Branch Name
-        id: get-branch-name
-        run: |
-          echo "branch=${{ steps.get-short-sha.outputs.sha }}=>develop" >> $GITHUB_OUTPUT
+      # - name: Get Branch Name
+      #   id: get-branch-name
+      #   run: |
+      #     echo "branch=${{ steps.get-short-sha.outputs.sha }}=>develop" >> $GITHUB_OUTPUT
 
-      - name: Debug
-        id: debug
-        run: |
-            {
-              echo "### Workflow variables"
-              echo "| Variable   | Value                                       |"
-              echo "| ---------- | ------------------------------------------- |"
-              echo "| sha        | ${{ steps.get-short-sha.outputs.sha }}      |"
-              echo "| branch     | ${{ steps.get-branch-name.outputs.branch }} |"
-            } >> $GITHUB_STEP_SUMMARY
+      # - name: Debug
+      #   id: debug
+      #   run: |
+      #       {
+      #         echo "### Workflow variables"
+      #         echo "| Variable   | Value                                       |"
+      #         echo "| ---------- | ------------------------------------------- |"
+      #         echo "| sha        | ${{ steps.get-short-sha.outputs.sha }}      |"
+      #         echo "| branch     | ${{ steps.get-branch-name.outputs.branch }} |"
+      #       } >> $GITHUB_STEP_SUMMARY
 
       - name: Checkout Support
         uses: actions/checkout@v3        
@@ -66,19 +66,18 @@ jobs:
           branch: develop
           labels: |
             cherry-pick
+          title: '[cherry-pick] {old_title}'
+          body: 'Cherry picking #{old_pull_request_id} onto this branch'            
 
-      # - name: Merge support branch into develop
-      #   run: |
-      #     git config user.name github-actions
-      #     git config user.email github-actions@github.com      
-      #     git merge ${{ github.base_ref }}
-      
-
-      # - name: Push new branch
-      #   run: |
-      #     git config user.name github-actions
-      #     git config user.email github-actions@github.com      
-      #     git push -f origin ${{ steps.get-branch-name.outputs.branch }}            
+      # - name: Post to a Slack channel
+      #   id: slack
+      #   uses: slackapi/slack-github-action@v1.23.0
+      #   with:
+      #     channel-id: ls-engineering-team-prs
+      #     payload: "Cherry pick shizz ..."
+      #   env:
+      #     SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+  
 
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}                    
