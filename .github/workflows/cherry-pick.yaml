@@ -40,7 +40,7 @@ jobs:
         # with:
         #   ref: ${{ github.base_ref }}
       
-      # do I ned to checkout develop ? 
+      # do I need to checkout develop ? 
       # maybe i could judt do:
       #   git checkout -b ${{ steps.get-branch-name.outputs.branch }} origin/develop
       # - name: Checkout Develop Branch
@@ -61,6 +61,7 @@ jobs:
       #     git cherry-pick -m 1 ${{ github.sha }}
 
       - name: Cherry pick into develop
+        id: cherry-pick
         uses: carloscastrojumo/github-cherry-pick-action@v1.0.9
         with:
           branch: develop
@@ -69,14 +70,42 @@ jobs:
           title: '[cherry-pick] {old_title}'
           body: 'Cherry picking #{old_pull_request_id} onto this branch'            
 
-      # - name: Post to a Slack channel
-      #   id: slack
-      #   uses: slackapi/slack-github-action@v1.23.0
-      #   with:
-      #     channel-id: ls-engineering-team-prs
-      #     payload: "Cherry pick shizz ..."
-      #   env:
-      #     SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+
+      - name: Get cherry-pick details
+        id: format_slack_message
+        uses: actions/github-script@v6
+        with:
+          script: |
+            return {
+              text: `Chery pick PR in ${github.repository} from ${github.base_ref} => develop`,
+              blocks: [
+                {
+                  type: "header",
+                  text: {
+                    type: "plain_text",
+                    text: ":package: Cherry Pick from support Notification",
+                    emoji: true
+                  }
+                },
+                {
+                  type: "section",
+                  text: {
+                    type: "mrkdwn",
+                    text: `Have a gander at ${{ steps.cherry-pick.outputs.html_url }} in *${context.repo.repo}* ... `,
+                    verbatim: true
+                  }
+                }
+              ]
+            }
+
+      - name: Post to a Slack channel
+        id: slack
+        uses: slackapi/slack-github-action@v1.23.0
+        with:
+          channel-id: C02UNDQS9GT
+          payload: ${{ steps.format_slack_message.outputs.result }}
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
   
 
 env:
